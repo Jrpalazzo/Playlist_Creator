@@ -7,12 +7,14 @@ import yaml
 import spotipy
 import spotipy.util as util
 
+from datetime import datetime
+
 from spotipy.oauth2 import SpotifyClientCredentials
 import tkinter as tk
 from tkinter import messagebox
 
 #read in the album data 
-data = pd.read_csv('./song_data.csv',encoding = "ISO-8859-1")
+data = pd.read_csv('./nick_data.csv',encoding = "ISO-8859-1")
 #scope of the spotify app
 scope = 'user-library-read, playlist-modify-private'
 
@@ -20,16 +22,48 @@ scope = 'user-library-read, playlist-modify-private'
 global user_config
 stream = open('config.yaml')
 user_config = yaml.load(stream)
-	
+
+#645 http://everynoise.com/everynoise1d.cgi?scope=all
+music_genres = ['psychedelic rock', 'folk album', 'rock art', 'new wave pop', 'indie folk', 'new wave', 'folk', 'baroque pop', 'brazilian rock', 'freak folk', 'progressive rock', 'symphonic rock', 'traditional folk', 'experimental pop', 'classic italian pop', 'post-punk', 'classic swedish pop', 'modern folk rock', 'new age', 'anti-folk', 'experimental rock', 'world', 'canadian folk', 
+'folk brasileiro', 'uk post-punk', 'japanese city pop', 'post-rock', 'suomi rock']
+
+SONG_LIMIT = 12
+API_LIMIT = 50
 token = util.prompt_for_user_token(user_config['username'], scope)
-	
+
+rn.seed(datetime.now())
+
 #Creates the button application 
 def ListApplication(canvas,window,song_ids):
-	MsgBox = tk.messagebox.askquestion ('New List','Are you sure you want to generate another list?',icon = 'warning')
-	if MsgBox == 'yes':
-		newList(canvas,window,song_ids)
+	newList(canvas,window,song_ids)
+
+def RandomApplication(canvas,window,song_ids):
+	row_list = []
+	count = 0
+	if token:
+		sp = spotipy.Spotify(auth=token)
+	
+		for i in range(SONG_LIMIT):
+			ranNum = rn.randint(0, len(music_genres)-1)
+	
+			search_results = sp.search(q='genre:' + music_genres[ranNum], type="track",limit=1,offset=API_LIMIT*i)
+
+			for t in search_results['tracks']['items']:
+				song_ids.append(t['id'])
+				row_list.append(t['name'])
+				T = tk.Label(window, text=row_list[count])
+				T.place(x=0,y=0 +(30*count))
+				count +=1
+		try:
+			sp.user_playlist_add_tracks(user=user_config['username'], playlist_id=user_config['playlist_id'], tracks=song_ids)
+		except:
+			print("Invalid IDs")
+	
 	else:
-		tk.messagebox.showinfo('Return','You will now return to the application screen')
+		print("Can't get token for", username)
+	
+	return song_ids
+				
 def DeleteApplication(canvas,window,song_ids):
 	if token:
 		sp = spotipy.Spotify(auth=token)
@@ -73,10 +107,13 @@ def createCanvas(window):
 	return canvas
 	
 def createButton(canvas,window,song_ids):
-	button1 = tk.Button (window, text='Generate another list?',command= lambda: ListApplication(canvas,window,song_ids))
-	button2 = tk.Button (window, text='Delete list.',command= lambda: DeleteApplication(canvas,window,song_ids))
-	canvas.create_window(80, 400, window=button1)
-	canvas.create_window(200, 400, window=button2)
+	button1 = tk.Button (window, text='Generate a list',command= lambda: ListApplication(canvas,window,song_ids))
+	button2 = tk.Button (window, text='Random list',command= lambda: RandomApplication(canvas,window,song_ids))
+	button3 = tk.Button (window, text='Delete list.',command= lambda: DeleteApplication(canvas,window,song_ids))
+
+	canvas.create_window(60, 400, window=button1)
+	canvas.create_window(150, 400, window=button2)
+	canvas.create_window(230, 400, window=button3)
 	
 #If the dialog box is clicked a new canvas, button and list is created 
 def newList(canvas,window,song_ids):
@@ -95,7 +132,6 @@ def newList(canvas,window,song_ids):
 		
 		for i in range(0, len(list)):
 			try:
-				#artist_results = sp.search(q='artist:' + list[i][0] + ', album:' + list[i][1], type=type, limit=1)
 				album_results = sp.search(q='album:' + list[i][1], type='album', limit=1)
 				
 				#get the first album uri
@@ -105,12 +141,13 @@ def newList(canvas,window,song_ids):
 				tracks = sp.album_tracks(album_id)
 				
 				#pick a random number 1 to 12 to add to the playlist
-				ranNum = rn.randint(1, 12)
+				ranNum = rn.randint(1, SONG_LIMIT)
 
 				i = 1
 				for track in tracks['items']:
 					if ranNum == i:
 						song_ids.append(track['id'])
+						print(song_ids)
 						i = 1
 					i += 1
 			except:
@@ -126,8 +163,6 @@ def newList(canvas,window,song_ids):
 	
 	return song_ids
 
-	
-
 if __name__ == '__main__':  
 	#list to story the song ids for each album
 	song_ids = []
@@ -138,7 +173,7 @@ if __name__ == '__main__':
 	
 	win_canvas = createCanvas(window)
 	
-	newList(win_canvas, window, song_ids)
+	createButton(win_canvas,window,song_ids)
 	
 	window.mainloop()
 
