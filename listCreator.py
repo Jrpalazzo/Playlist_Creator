@@ -24,11 +24,12 @@ stream = open('config.yaml')
 user_config = yaml.load(stream)
 
 #645 http://everynoise.com/everynoise1d.cgi?scope=all
-music_genres = ['psychedelic rock', 'folk album', 'rock art', 'new wave pop', 'indie folk', 'new wave', 'folk', 'baroque pop', 'brazilian rock', 'freak folk', 'progressive rock', 'symphonic rock', 'traditional folk', 'experimental pop', 'classic italian pop', 'post-punk', 'classic swedish pop', 'modern folk rock', 'new age', 'anti-folk', 'experimental rock', 'world', 'canadian folk', 
-'folk brasileiro', 'uk post-punk', 'japanese city pop', 'post-rock', 'suomi rock']
+#music_genres = ['psychedelic rock', 'folk album', 'new wave pop', 'indie folk', 'new wave', 'folk', 'baroque pop', 'brazilian rock', 'freak folk', 'progressive rock', 'symphonic rock', 'traditional folk', 'experimental pop', 'classic italian pop', 'post-punk', 'classic swedish pop', 'modern folk rock', 'new age', 'anti-folk', 'experimental rock', 'world', 'canadian folk', 'folk brasileiro', 'uk post-punk', 'japanese city pop', 'post-rock', 'suomi rock']
+
+music_genres = ['psychedelic rock', 'new wave pop', 'new wave', 'baroque pop', 'freak folk', 'progressive rock', 'experimental pop', 'post-punk', 'experimental rock', 'uk post-punk', 'post-rock']
 
 SONG_LIMIT = 12
-API_LIMIT = 50
+API_LIMIT = 100
 token = util.prompt_for_user_token(user_config['username'], scope)
 
 rn.seed(datetime.now())
@@ -39,21 +40,32 @@ def ListApplication(canvas,window,song_ids):
 
 def RandomApplication(canvas,window,song_ids):
 	row_list = []
+	search_results = []
 	count = 0
+	song_switch = False
 	if token:
 		sp = spotipy.Spotify(auth=token)
 	
 		for i in range(SONG_LIMIT):
-			ranNum = rn.randint(0, len(music_genres)-1)
-	
-			search_results = sp.search(q='genre:' + music_genres[ranNum], type="track",limit=1,offset=API_LIMIT*i)
+			while song_switch is False:
+				searchLimit = rn.randint(0, API_LIMIT)
+				ranNum = rn.randint(0, len(music_genres)-1)
+				
+				search_results = sp.search(q='genre:' + music_genres[ranNum], type="track", limit=1, offset=API_LIMIT)
+				print(search_results)
 
+				for t in search_results['tracks']['items']:
+					if t['name'] is not None:
+						song_switch = True
+			
 			for t in search_results['tracks']['items']:
 				song_ids.append(t['id'])
 				row_list.append(t['name'])
 				T = tk.Label(window, text=row_list[count])
 				T.place(x=0,y=0 +(30*count))
 				count +=1
+
+			song_switch = False
 		try:
 			sp.user_playlist_add_tracks(user=user_config['username'], playlist_id=user_config['playlist_id'], tracks=song_ids)
 		except:
@@ -65,11 +77,11 @@ def RandomApplication(canvas,window,song_ids):
 	return song_ids
 				
 def DeleteApplication(canvas,window,song_ids):
+	canvas.destroy()
 	if token:
 		sp = spotipy.Spotify(auth=token)
 		#if there are songs in the playlist remove them
 		try:
-			print(song_ids)
 			sp.user_playlist_remove_all_occurrences_of_tracks(user=user_config['username'], playlist_id=user_config['playlist_id'], tracks=song_ids)
 			#make the list null, actually clears the list
 			song_ids[:] = []
@@ -78,6 +90,9 @@ def DeleteApplication(canvas,window,song_ids):
 	else:
 		print("Can't get token for", username)
 
+	win_canvas= createCanvas(window)
+	
+	createButton(win_canvas, window,song_ids)
 	
 #Generates a random list of 12 albums
 def generateList():
@@ -147,7 +162,7 @@ def newList(canvas,window,song_ids):
 				for track in tracks['items']:
 					if ranNum == i:
 						song_ids.append(track['id'])
-						print(song_ids)
+						#print(song_ids)
 						i = 1
 					i += 1
 			except:
