@@ -29,7 +29,7 @@ user_config = yaml.load(stream)
 music_genres = ['psychedelic rock', 'new wave pop', 'new wave', 'baroque pop', 'freak folk', 'progressive rock', 'experimental pop', 'post-punk', 'experimental rock', 'uk post-punk', 'post-rock']
 
 SONG_LIMIT = 12
-API_LIMIT = 100
+API_LIMIT = 1000
 token = util.prompt_for_user_token(user_config['username'], scope)
 
 rn.seed(datetime.now())
@@ -43,15 +43,24 @@ def RandomApplication(canvas,window,song_ids):
 	search_results = []
 	count = 0
 	song_switch = False
+	
+	#randomSongsArray = ['%25a%25', 'a%25', '%25a','%25e%25', 'e%25', '%25e','%25i%25', 'i%25', '%25i', '%25o%25', 'o%25', '%25o','%25u%25', 'u%25', '%25u']
+		
 	if token:
 		sp = spotipy.Spotify(auth=token)
 	
 		for i in range(SONG_LIMIT):
 			while song_switch is False:
-				searchLimit = rn.randint(0, API_LIMIT)
+				searchLimit = rn.randint(1, API_LIMIT)
 				ranNum = rn.randint(0, len(music_genres)-1)
+				#randomSongs = rn.choice(randomSongsArray)
 				
-				search_results = sp.search(q='genre:' + music_genres[ranNum], type="track", limit=1, offset=API_LIMIT)
+				if searchLimit <= 1000 and searchLimit > 0:
+					searchLimit = searchLimit - 10
+		
+				search_results = sp.search(q= 'genre:' + music_genres[ranNum], limit=1, offset=searchLimit, type="track")
+			
+					
 				print(search_results)
 
 				for t in search_results['tracks']['items']:
