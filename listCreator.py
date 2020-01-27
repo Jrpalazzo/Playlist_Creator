@@ -26,7 +26,7 @@ user_config = yaml.load(stream)
 #645 http://everynoise.com/everynoise1d.cgi?scope=all
 #music_genres = ['psychedelic rock', 'folk album', 'new wave pop', 'indie folk', 'new wave', 'folk', 'baroque pop', 'brazilian rock', 'freak folk', 'progressive rock', 'symphonic rock', 'traditional folk', 'experimental pop', 'classic italian pop', 'post-punk', 'classic swedish pop', 'modern folk rock', 'new age', 'anti-folk', 'experimental rock', 'world', 'canadian folk', 'folk brasileiro', 'uk post-punk', 'japanese city pop', 'post-rock', 'suomi rock']
 
-music_genres = ['psychedelic rock', 'new wave pop', 'new wave', 'baroque pop', 'freak folk', 'progressive rock', 'experimental pop', 'post-punk', 'experimental rock', 'uk post-punk', 'post-rock']
+music_genres = ["psychedelic rock", "new wave pop", "new wave", "baroque pop", "freak folk", "progressive rock", "experimental pop", "post punk", "experimental rock", "uk post punk", "post rock"]
 
 SONG_LIMIT = 12
 API_LIMIT = 1000
@@ -44,7 +44,7 @@ def RandomApplication(canvas,window,song_ids):
 	count = 0
 	song_switch = False
 	
-	#randomSongsArray = ['%25a%25', 'a%25', '%25a','%25e%25', 'e%25', '%25e','%25i%25', 'i%25', '%25i', '%25o%25', 'o%25', '%25o','%25u%25', 'u%25', '%25u']
+	randomSongsArray = ['%25a%25', 'a%25', '%25a','%25e%25', 'e%25', '%25e','%25i%25', 'i%25', '%25i', '%25o%25', 'o%25', '%25o','%25u%25', 'u%25', '%25u']
 		
 	if token:
 		sp = spotipy.Spotify(auth=token)
@@ -53,14 +53,10 @@ def RandomApplication(canvas,window,song_ids):
 			while song_switch is False:
 				searchLimit = rn.randint(1, API_LIMIT)
 				ranNum = rn.randint(0, len(music_genres)-1)
-				#randomSongs = rn.choice(randomSongsArray)
+				randomSongs = rn.choice(randomSongsArray)
 				
-				if searchLimit <= 1000 and searchLimit > 0:
-					searchLimit = searchLimit - 10
-		
-				search_results = sp.search(q= 'genre:' + music_genres[ranNum], limit=1, offset=searchLimit, type="track")
-			
-					
+				search_results = sp.search('genre:"{}"'.format(music_genres[ranNum]), limit=1, offset=searchLimit, type="track")
+						
 				print(search_results)
 
 				for t in search_results['tracks']['items']:
