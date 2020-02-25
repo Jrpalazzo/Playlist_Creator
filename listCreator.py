@@ -14,7 +14,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 #read in the album data 
-data = pd.read_csv('./nick_data.csv',encoding = "ISO-8859-1")
+data = pd.read_csv('./song_data.csv',encoding = "ISO-8859-1")
 #scope of the spotify app
 scope = 'user-library-read, playlist-modify-private'
 
